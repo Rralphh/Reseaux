@@ -68,6 +68,13 @@ private static String askClient() throws IOException {
         
 	return "commande envoyer";
 }
+private static File demanderNomFichier(BufferedReader reader) throws IOException{
+        String nomFichier = null;
+        File fichierUpload = null;
+        nomFichier=reader.readLine();
+        fichierUpload= new File("/." + nomFichier);
+        return fichierUpload;
+}
 private static void envoyerFichierUpload(File fichierUpload, ObjectOutputStream objetsocketOut) throws IOException, ClassNotFoundException{
         byte [] byteEnvoye = new byte [(int)fichierUpload.length()];
 
