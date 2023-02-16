@@ -40,7 +40,7 @@ String[] commandSplit = commandReceived.split("\\s+");
 switch(commandSplit[0]) {
 
 case "cd":
-	out.writeUTF("commande cd recu");
+	out.writeUTF("commande cd recue");
   break;
   
 case "ls":
@@ -69,15 +69,17 @@ case "ls":
   break;
   
 case "mkdir":
-	out.writeUTF("commande mkdir recu");
+	out.writeUTF("commande mkdir recue");
   break;
   
 case "upload":
-	out.writeUTF("commande upload recu");
+	out.writeUTF("commande upload recue");
+	
   break;
   
 case "download":
-	out.writeUTF("commande download recu");
+	out.writeUTF("commande download recue");
+
   break;
   
 case "exit":
