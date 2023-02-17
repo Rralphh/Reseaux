@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -56,36 +57,39 @@ case "cd":
 		out.writeUTF((System.getProperty("user.dir")));
 	}
 	else if(commandSplit[0].equals("cd") && commandSplit[1].equals("..")) {
+		
+		String localDisk=(System.getProperty("user.dir")).substring(0, 3);
+		if (System.getProperty("user.dir").equals(localDisk)) {
+			out.writeUTF("Can't go any further you are in the local disk");
+			break;
+		}
 		String currentDir = System.getProperty("user.dir");
 		File parentDir = new File(currentDir).getParentFile();
 		System.setProperty("user.dir", parentDir.getAbsolutePath());
 		out.writeUTF((System.getProperty("user.dir")));
+		
 	}
 	else if(commandSplit[0].equals("cd")) {
-		String path=commandSplit[1];
+		
+		String path=(System.getProperty("user.dir")+"\\"+commandSplit[1]);
 		Path filePath = Paths.get(path);
 		if (Files.exists(filePath)) {
 			System.setProperty("user.dir", path );
 			out.writeUTF((System.getProperty("user.dir")));
+			
+			
 		} else {
 		    // file does not exist
-			out.writeUTF("file does not exist");
-		}
+			out.writeUTF("file does not exist in this directory");
+		   }
 		
-	}
-	
-
-	else {
-		
-		System.out.println(commandSplit[1]);
-		out.writeUTF("commande rejetter");
 	}
 	
   break;
   
 case "ls":
 	
-	String directoryFile = FileSystems.getDefault().getPath(".").toString();
+	String directoryFile = System.getProperty("user.dir");
 	File fileObject = new File(directoryFile);
 	File[] allFiles = fileObject.listFiles();
 	String stringAllFiles="";
@@ -108,7 +112,7 @@ case "ls":
   break;
   
 case "mkdir":
-	String workingDirectory = System.getProperty("user.dir");// faut tester avec d'autre directory
+	String workingDirectory = System.getProperty("user.dir");
 	
 	File fileDirectory = new File(workingDirectory+"/"+commandSplit[1]);
 	if (!fileDirectory.exists()){
@@ -123,18 +127,32 @@ case "mkdir":
   break;
   
 case "upload":
-	ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-	String nomFichier=commandSplit[1];
-	File fichierUpload= new File("/." + nomFichier);
-	envoyerFichierUpload(fichierUpload,objectOutputStream);
-	out.writeUTF("commande upload recu");
-  break;
+    InputStream inputStream = socket.getInputStream();
+    DataInputStream dataInputStream = new DataInputStream(inputStream);
+
+  
+    FileOutputStream fileOutputStream = new FileOutputStream(System.getProperty("user.dir")+"\\"+commandSplit[1]);
+
+    
+    byte[] bufferUser = new byte[4096];
+    int bytesRead;
+    while ((bytesRead = dataInputStream.read(bufferUser)) != -1) {
+        fileOutputStream.write(bufferUser, 0, bytesRead);
+    }
+
+    fileOutputStream.close();
+	break;
+	
+	
+
   
 case "download":
+	
 	if(commandSplit.length==1) {
 		out.writeUTF("fichier n'existe pas");
 		break;
 		}
+	
 	File fileChecking = new File(System.getProperty("user.dir")+'\\'+ commandSplit[1]);
 	if(!fileChecking.exists()) {
 		out.writeUTF("fichier n'existe pas");
@@ -153,15 +171,13 @@ case "download":
 		
 		byte[] buffer = new byte[4096];
 		int read = 0;
-		int totalRead = 0;
 		int remaining = filesize;
 		while((read = fis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-							totalRead += read;
 							remaining -= read;
 							dout.write(buffer, 0, read);
 		}
 		fis.close();
-		dout.close();
+
 		System.out.println("finis dowload");
 		break;
 	
@@ -187,39 +203,14 @@ default:
 }
 
 } catch (IOException e) {
-System.out.println("Error handling client# " + clientNumber + ": " + e);
+System.out.println("Error handling client# " + clientNumber + ": " + e.getStackTrace());
 } finally {
 try {
 socket.close();
 } catch (IOException e) {
 System.out.println("Couldn't close a socket, what's going on?");}
 System.out.println("Connection with client# " + clientNumber+ " closed");}}
-private void recevoirFichierDowload() {
-	// TODO Auto-generated method stub
-	
-}
-private static void downloadFromServer(String path, DataOutputStream out) throws Exception{
-    int bytes = 0;
-    File file = new File(path);
-    FileInputStream fileInputStream = new FileInputStream(file);
-    
-    out.writeLong(file.length());  
-    byte[] buffer = new byte[4*1024];
-    while ((bytes=fileInputStream.read(buffer))!=-1){
-        out.write(buffer,0,bytes);
-        out.flush();
-    }
-    fileInputStream.close();
-}
-private static void envoyerFichierUpload(File fichierUpload, ObjectOutputStream objetsocketOut) throws IOException{
-	byte [] byteEnvoye = new byte [(int)fichierUpload.length()];
 
-	BufferedInputStream inputStrem = null;
-	inputStrem = new BufferedInputStream(new FileInputStream(fichierUpload));
-	inputStrem.read(byteEnvoye, 0, byteEnvoye.length);
-	inputStrem.close();
-
-}
         
 }
 
